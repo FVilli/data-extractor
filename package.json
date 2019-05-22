@@ -1,0 +1,23 @@
+{
+  "name": "data-extractor",
+  "version": "0.1.0",
+  "description": "public but not general purpose",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "tsc && node build/test.js",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FVilli/data-extractor.git"
+  },
+  "author": "FV@IAE",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FVilli/data-extractor/issues"
+  },
+  "homepage": "https://github.com/FVilli/data-extractor#readme",
+  "dependencies": {
+    "@types/node": "^12.0.2"
+  }
+}
