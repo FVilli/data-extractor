@@ -1,6 +1,6 @@
 {
   "name": "data-extractor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "public but not general purpose",
   "main": "build/index.js",
   "scripts": {
