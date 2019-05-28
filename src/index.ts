@@ -1,15 +1,15 @@
 export interface DataPacket_0V0 { version:string, ts:Date }
-export interface DataPacket_0V1 { version:string, ts:Date, nsensors:number, sensors:Array<Sensor_V1>, header_data_size:number, sensor_data_size:number }
-export interface Sensor_V1 { addr:number, name:string, vbus:number, temp_ext:number, temp_int:number, hum_int:number, offset:XYZ, scale:XYZ, clock_precision:number, samples:Array<XYZ> }
+export interface DataPacket_0V1 { version:string, ts:Date, n_of_sensors:number, sensors_data:Array<Sensor_Data_V1>, header_data_size:number, sensor_data_size:number }
+export interface Sensor_Data_V1 { addr:number, name:string, v_bus:number, temp_ext:number, temp_int:number, hum_int:number, offset:XYZ, scale:XYZ, clock_precision:number, samples:Array<XYZ> }
 export interface XYZ { x:number, y:number, z:number }
-export enum DataPacketVersion { Unknown = "?", DP0V0 = "0V0", DP0V1 = "0V1" }
+export enum DataPacketVersion { Unknown = "?", DP_0V0 = "0V0", DP_0V1 = "0V1" }
 
 export class DataPacket<T> {
     private ts:Date;
     private version:string; 
     private valid = false;
     private value:T = null;
-    constructor(public DataSource:DataView, public Version:DataPacketVersion) {
+    constructor(public DataSource:DataView, public Version:DataPacketVersion = DataPacketVersion.Unknown) {
         this.ts = new Date(DataSource.getUint32(0) * 1000);
         this.version = DataSource.getUint8(4) + "V" + DataSource.getUint8(5);
         switch(this.version) {
@@ -32,11 +32,11 @@ export class DataPacket<T> {
         const digit = 0.076;
         const samples_per_sensor = 50
         try {
-            let rv:DataPacket_0V1 = { header_data_size:7, sensor_data_size:320, ts:this.ts, version:this.version, nsensors:dv.getUint8(6), sensors:[] };
+            let rv:DataPacket_0V1 = { header_data_size:7, sensor_data_size:320, ts:this.ts, version:this.version, n_of_sensors:dv.getUint8(6), sensors_data:[] };
 
-            if(dv.byteLength!==(rv.header_data_size + rv.sensor_data_size*rv.nsensors)) throw new Error("Invalid data size");
+            if(dv.byteLength!==(rv.header_data_size + rv.sensor_data_size*rv.n_of_sensors)) throw new Error("Invalid data size");
 
-            for (let i = 0; i < rv.nsensors; i++) {
+            for (let i = 0; i < rv.n_of_sensors; i++) {
 
                 const offset = rv.header_data_size + i * rv.sensor_data_size;
                 const addr = dv.getUint8(offset);
@@ -46,16 +46,16 @@ export class DataPacket<T> {
                 const hum_int = dv.getInt16(offset + 7)/100;
                 const scale: XYZ = { x: dv.getInt8(offset + 15), y: dv.getInt8(offset + 16), z: dv.getInt8(offset + 17) };
 
-                const s: Sensor_V1 = {
+                const s: Sensor_Data_V1 = {
                     name: addr>128 ? "SX" + (addr-128) : "DX" + addr,
-                    addr, vbus, temp_ext, temp_int, hum_int,
+                    addr, v_bus: vbus, temp_ext, temp_int, hum_int,
                     offset: { x: dv.getInt16(offset + 9) * digit, y: dv.getInt16(offset + 11) * digit, z: dv.getInt16(offset + 13) * digit },
                     scale,
                     clock_precision: dv.getUint16(offset + 18) / 100,
                     samples: this.parseXYZ(dv, offset + 20, samples_per_sensor, scale, digit/2048)
                 };
                 
-                rv.sensors.push(s)  
+                rv.sensors_data.push(s)  
             }
 
             return <T>(<any>rv);
